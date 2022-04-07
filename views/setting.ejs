@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Analysis</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <ul class='nav' id='vList'>
+  </ul>
+  <hr>
+  <div class="set_div">
+    <h3>setting</h3>
+    <form class="setForm" id="setForm" onsubmit="chartMaker(event)">
+      <label for="cate">choose object : </label>
+      <select id="cate" name="cate"></select>
+      <br>
+      <label for="counter">Counter : </label>
+      <input type="checkbox" name="counter" id="counter">
+      <label for="speed">Speed : </label>
+      <input type="checkbox" name="speed" id="speed">
+      <button type="submit" name="set">set</button>
+    </form>
+  </div>
+  <hr>
+  <a href="/analysisData/etriDeajeon">test</a>
+  <div class="graph_div" id="graph_div">
+  </div>
+  <script>
+  function getvideolist(){
+    var req = new XMLHttpRequest();
+    req.open('GET','/videolist', true);
+    req.responseType='json';
+    req.onload = ()=>{
+      var ul =document.getElementById('vList');
+      var videolist = req.response[0].videolist;
+      videolist = videolist.toString().replaceAll('.mp4','');
+      var list = videolist.split(',');
+      list.forEach(function(element){
+        var li = document.createElement('li');
+        var a = document.createElement('a')
+        a.href='/analysis/'+element;
+        a.innerText=element;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }
+    req.send();
+  }
+  function addOption() {
+    var req = new XMLHttpRequest();
+    var path = `${window.location.pathname}`;
+    path = path.replace('/analysis/','');
+    req.open('GET',`/objectCategory/${path}`, true);
+    req.responseType='json';
+    req.onload = ()=>{
+      var ul =document.getElementById('vList');
+      var category = req.response[0].category;
+      var selectEl = document.getElementById('cate');
+      var i = 0;
+      while(i < category.length){
+        var objOption = document.createElement('option');
+        objOption.text = category[i];
+        objOption.value = category[i];
+        selectEl.options.add(objOption);
+        i++;
+      }
+    }
+    req.send();
+  }
+  function drawChart(time, label, data){
+    var graphDiv = document.getElementById('graph_div');
+    var graphCvs = document.createElement('canvas');
+
+    var chart = new Chart(graphCvs, {
+      type: 'line',
+      data: {
+        labels: time,
+        datasets: [{
+          label: label,
+          data: data,
+          borderColor: [
+            'rgba(180, 180, 255, 1)',
+          ],
+          borderWidth: 1,
+          pointRadius: 1.5
+        }]
+      },
+      options: {
+        onClick: function(point, event){
+          if(event.length == 1){
+            videoPopup(event[0].index);
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    graphDiv.appendChild(graphCvs);
+  }
+
+  function chartMaker(){
+    event.preventDefault();
+    var cate = this.cate.value;
+    var speedCheck = this.speed.checked;
+    var counter = this.counter.checked;
+    var req = new XMLHttpRequest();
+    var path = `${window.location.pathname}`;
+    path = path.replace('/analysis/','');
+    req.open('GET',`/analysisData/${path}/cate/${cate}`, true);
+    req.responseType='json';
+    req.onload = ()=>{
+      var graphDiv = document.getElementById('graph_div');
+      var time = new Array();
+      for(var i = 0; i < req.response[0].minute.length; i++){
+        time[i] = req.response[0].minute[i]+":"+req.response[0].seconds[i];
+      }
+      if(counter){
+        var label = '수';
+        var target = document.createElement('h3');
+        target.innerText = `${cate} counter`;
+        graphDiv.appendChild(target);
+        drawChart(time,label,req.response[0].count);
+      }
+      if(speed){
+        var label = '속도';
+        var target = document.createElement('h3');
+        target.innerText = `${cate} speeds`;
+        graphDiv.appendChild(target);
+        drawChart(time,label,req.response[0].speeds);
+      }
+      console.log(req.response[0]);
+    }
+    req.send();
+  }
+  addOption();
+  getvideolist();
+  function videoPopup(times){
+    var request = new XMLHttpRequest();
+    var path = `${window.location.pathname}`;
+    path = path.replace('/analysis/','');
+    request.open('GET',`/videopart/video/${path}/time/${times}`, true);
+    request.onreadystatechange = function(){
+      if(request.readyState == 4 && request.status==200){
+        window.open(`/video/${path}/time/${times}`, "a", "width=400, height=300, left=100, top=50");
+      }
+    }
+    request.send();
+  }
+</script>
+</body>
+</html>

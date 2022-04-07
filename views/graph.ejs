@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Analysis</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <ul class='nav' id='vList'>
+  </ul>
+  <hr>
+  <div class="set_div">
+    <h3>setting</h3>
+    <form class="set_from" action="" method="post">
+      <label for="cate">choose object : </label>
+      <select id="cate" name="cate"></select>
+      <br>
+      <label for="counter">Counter : </label>
+      <input type="checkbox" name="counter" value=1>
+      <label for="speed">Speed : </label>
+      <input type="checkbox" name="speed" value=1>
+      <button type="submit" name="set">set</button>
+    </form>
+
+  </div>
+  <!-- player 1 -->
+  <!-- <video width="30%" controls>
+  <source src="/video" />
+</video> -->
+<hr>
+<h3><%= target %></h3>
+<canvas id="counterChart" height="30" ></canvas>
+<canvas id="speedChart" height="30" ></canvas>
+<script>
+function getvideolist(){
+  var req = new XMLHttpRequest();
+  req.open('GET','/videolist', true);
+  req.responseType='json';
+  req.onload = ()=>{
+    var ul =document.getElementById('vList');
+    var videolist = req.response[0].videolist;
+    videolist = videolist.toString().replaceAll('.mp4','');
+    var list = videolist.split(',');
+    list.forEach(function(element){
+      var li = document.createElement('li');
+      var a = document.createElement('a')
+      a.href='/analysis/'+element;
+      a.innerText=element;
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+  }
+  req.send();
+}
+function AddOption() {
+  var selectEl = document.getElementById('cate');
+  var category = "<%= category %>";
+  category = category.replace('"','');
+  var cate = category.split(',');
+  var i = 0;
+  while(i < cate.length){
+    var objOption = document.createElement('option');
+    objOption.text = cate[i];
+    objOption.value = cate[i];
+    selectEl.options.add(objOption);
+    i++;
+  }
+}
+AddOption();
+getvideolist();
+
+var minute = [<%= minute %>];
+var seconds = [<%= seconds %>];
+var countCheck = <%= counter %>;
+var speedCheck = <%= speed %>;
+var time = new Array();
+for(var i = 0; i < minute.length; i++){
+  time[i] = minute[i]+":"+seconds[i];
+}
+function countChart(){
+  var c_ctx = document.getElementById('counterChart');
+  var counterChart = new Chart(c_ctx, {
+    type: 'line',
+    data: {
+      labels: time,
+      datasets: [{
+        label: '수',
+        data: [<%= count %>],
+        borderColor: [
+          'rgba(180, 180, 255, 1)',
+        ],
+        borderWidth: 1,
+        pointRadius: 1.5
+      }]
+    },
+    options: {
+      onClick: function(point, event){
+        if(event.length == 1){
+          videoPopup(event[0].index);
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+function speedChartP(){
+  var s_ctx = document.getElementById('speedChart');
+  var speedChart = new Chart(s_ctx, {
+    type: 'line',
+    data: {
+      labels: time,
+      datasets: [{
+        label: '속도',
+        data: [<%= speeds %>],
+        borderColor: [
+          'rgba(255, 180, 180, 1)',
+        ],
+        borderWidth: 1,
+        pointRadius: 1.5
+      }]
+    },
+    options: {
+      onClick: function(point, event){
+        if(event.length == 1){
+          videoPopup(event[0].index);
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+if(countCheck == 1)countChart();
+if(speedCheck == 1)speedChartP();
+
+function videoPopup(times){
+  var request = new XMLHttpRequest();
+  var path = `${window.location.pathname}`;
+  path = path.replace('/analysis/','');
+  request.open('GET',`/videopart/video/${path}/time/${times}`, true);
+  request.onreadystatechange = function(){
+    if(request.readyState == 4 && request.status==200){
+      window.open(`/video/${path}/time/${times}`, "a", "width=400, height=300, left=100, top=50");
+    }
+  }
+  request.send();
+}
+</script>
+</body>
+</html>

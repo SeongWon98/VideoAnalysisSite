@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Analysis</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+  <ul class='nav' id='vList'>
+  </ul>
+  <hr>
+  <script>
+  function getvideolist(){
+    var req = new XMLHttpRequest();
+    req.open('GET','/videolist', true);
+    req.responseType='json';
+    req.onload = ()=>{
+      var ul =document.getElementById('vList');
+      var videolist = req.response[0].videolist;
+      videolist = videolist.toString().replaceAll('.mp4','');
+      var list = videolist.split(',');
+      list.forEach(function(element){
+        var li = document.createElement('li');
+        var a = document.createElement('a')
+        a.href='/analysis/'+element;
+        a.innerText=element;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }
+    req.send();
+  }
+  getvideolist();
+  </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# 폴더 제외 #
+node_modules/
+public/temp
+public/videos
