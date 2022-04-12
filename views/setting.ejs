@@ -23,9 +23,9 @@
     </form>
   </div>
   <hr>
-  <a href="/analysisData/etriDeajeon">test</a>
   <div class="graph_div" id="graph_div">
   </div>
+
   <script>
   function getvideolist(){
     var req = new XMLHttpRequest();
@@ -47,6 +47,7 @@
     }
     req.send();
   }
+
   function addOption() {
     var req = new XMLHttpRequest();
     var path = `${window.location.pathname}`;
@@ -68,10 +69,11 @@
     }
     req.send();
   }
+
   function drawChart(time, label, data){
     var graphDiv = document.getElementById('graph_div');
     var graphCvs = document.createElement('canvas');
-
+    graphCvs.height = 50;
     var chart = new Chart(graphCvs, {
       type: 'line',
       data: {
@@ -106,7 +108,7 @@
     event.preventDefault();
     var cate = this.cate.value;
     var speedCheck = this.speed.checked;
-    var counter = this.counter.checked;
+    var counterCheck = this.counter.checked;
     var req = new XMLHttpRequest();
     var path = `${window.location.pathname}`;
     path = path.replace('/analysis/','');
@@ -118,14 +120,14 @@
       for(var i = 0; i < req.response[0].minute.length; i++){
         time[i] = req.response[0].minute[i]+":"+req.response[0].seconds[i];
       }
-      if(counter){
+      if(counterCheck){
         var label = '수';
         var target = document.createElement('h3');
         target.innerText = `${cate} counter`;
         graphDiv.appendChild(target);
         drawChart(time,label,req.response[0].count);
       }
-      if(speed){
+      if(speedCheck){
         var label = '속도';
         var target = document.createElement('h3');
         target.innerText = `${cate} speeds`;
@@ -136,8 +138,10 @@
     }
     req.send();
   }
+
   addOption();
   getvideolist();
+
   function videoPopup(times){
     var request = new XMLHttpRequest();
     var path = `${window.location.pathname}`;
@@ -145,7 +149,7 @@
     request.open('GET',`/videopart/video/${path}/time/${times}`, true);
     request.onreadystatechange = function(){
       if(request.readyState == 4 && request.status==200){
-        window.open(`/video/${path}/time/${times}`, "a", "width=400, height=300, left=100, top=50");
+        window.open(`/video/${path}/time/${times}`, "a", "width=1200, height=900, left=100, top=50");
       }
     }
     request.send();
