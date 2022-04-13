@@ -15,6 +15,13 @@
       <label for="cate">choose object : </label>
       <select id="cate" name="cate"></select>
       <br>
+      <label for="range">choose time range : </label>
+      <select id="range" name="range">
+        <option value=10>10</option>
+        <option value=30>30</option>
+        <option value=60>60</option>
+      </select>
+      <br>
       <label for="counter">Counter : </label>
       <input type="checkbox" name="counter" id="counter">
       <label for="speed">Speed : </label>
@@ -91,7 +98,9 @@
       options: {
         onClick: function(point, event){
           if(event.length == 1){
-            videoPopup(event[0].index);
+            var timesplit = time[0].split(':');
+            var timerange = parseInt(timesplit[0]*60) + parseInt(timesplit[1]);
+            videoPopup(timerange, event[0].index);
           }
         },
         scales: {
@@ -107,34 +116,30 @@
   function chartMaker(){
     event.preventDefault();
     var cate = this.cate.value;
+    var timerange = this.range.value;
     var speedCheck = this.speed.checked;
     var counterCheck = this.counter.checked;
     var req = new XMLHttpRequest();
     var path = `${window.location.pathname}`;
     path = path.replace('/analysis/','');
-    req.open('GET',`/analysisData/${path}/cate/${cate}`, true);
+    req.open('GET',`/analysisData/${path}/cate/${cate}/timerange/${timerange}`, true);
     req.responseType='json';
     req.onload = ()=>{
       var graphDiv = document.getElementById('graph_div');
-      var time = new Array();
-      for(var i = 0; i < req.response[0].minute.length; i++){
-        time[i] = req.response[0].minute[i]+":"+req.response[0].seconds[i];
-      }
       if(counterCheck){
         var label = '수';
         var target = document.createElement('h3');
         target.innerText = `${cate} counter`;
         graphDiv.appendChild(target);
-        drawChart(time,label,req.response[0].count);
+        drawChart(req.response[0].time,label,req.response[0].count);
       }
       if(speedCheck){
         var label = '속도';
         var target = document.createElement('h3');
         target.innerText = `${cate} speeds`;
         graphDiv.appendChild(target);
-        drawChart(time,label,req.response[0].speeds);
+        drawChart(req.response[0].time,label,req.response[0].speeds);
       }
-      console.log(req.response[0]);
     }
     req.send();
   }
@@ -142,14 +147,15 @@
   addOption();
   getvideolist();
 
-  function videoPopup(times){
+  function videoPopup(timerange, times){
     var request = new XMLHttpRequest();
+    var graphDiv = document.getElementById('graph_div');
     var path = `${window.location.pathname}`;
     path = path.replace('/analysis/','');
-    request.open('GET',`/videopart/video/${path}/time/${times}`, true);
+    request.open('GET',`/videopart/video/${path}/time/${times}/timerange/${timerange}`, true);
     request.onreadystatechange = function(){
       if(request.readyState == 4 && request.status==200){
-        window.open(`/video/${path}/time/${times}`, "a", "width=1200, height=900, left=100, top=50");
+        window.open(`/video/${path}/time/${times}/timerange/${timerange}`, "a", "width=1200, height=900, left=100, top=50");
       }
     }
     request.send();

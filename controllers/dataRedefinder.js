@@ -10,6 +10,7 @@ var unrefineData = {
 var refineData = {
   minute:[],
   seconds:[],
+  time: [],
   count:[],
   speed:[],
 }
@@ -57,13 +58,14 @@ function dataExtraction(objData, max){
   unrefineData.distance = distance;
 }
 
-function reestablish(frame, max){
+function reestablish(frame, max, timerange){
   var i = 0, k = 0;
     var minute= Array.from({length: parseInt(max/frame)+1}, () => 0);
     var seconds= Array.from({length: parseInt(max/frame)+1}, () => 0);
     var count = Array.from({length: parseInt(max/frame)+1}, () => 0);
     var speed = Array.from({length: parseInt(max/frame)+1}, () => 0);
-    var timeframe = frame/10;
+    var time = Array.from({length: parseInt(max/frame)+1}, () => 0);
+    var timeframe = frame/timerange;
     while(i < max){
       count[k] = count[k]+unrefineData.counter[i];
       speed[k]= speed[k]+unrefineData.distance[i];
@@ -72,6 +74,7 @@ function reestablish(frame, max){
         else count[k] = parseInt(count[k]/frame);
         minute[k] = parseInt(i/timeframe/60);
         seconds[k] = i/timeframe % 60;
+        time[k]= minute[k]+":"+seconds[k];
         if(count[k]!= 0)speed[k]= parseInt(speed[k]/frame/count[k]);
         else speed[k] = 0;
         k++;
@@ -81,6 +84,7 @@ function reestablish(frame, max){
         else count[k] = parseInt(count[k]/(i%frame));
         minute[k] = parseInt(i/timeframe/60);
         seconds[k] = parseInt(i/timeframe % 60);
+        time[k]= minute[k]+":"+seconds[k];
         if(count[k]!= 0)speed[k]= parseInt(speed[k]/(i%frame)/count[k]);
         else speed[k] = 0;
         k++;
@@ -89,25 +93,12 @@ function reestablish(frame, max){
     }
     refineData.minute = minute;
     refineData.seconds = seconds;
+    refineData.time = time;
     refineData.count = count;
     refineData.speed = speed;
 }
 
-function frameLength(csvData){
-  var i = csvData.length - parseInt(csvData.length / 4);
-  var max = parseInt(0);
-  var frame = 150;
-
-  while(i < csvData.length){
-    var data = csvData[i][4].substring(1,csvData[i][4].length-1);
-    data = data.split(", ");
-    if(max < parseInt(data[data.length-1]))max = parseInt(data[data.length-1]);
-    i++;
-  }
-  return max;
-}
-
-redefine.default = function(originalCsv, cate, totalFrame, frame, callback){
+redefine.default = function(originalCsv, cate, totalFrame, frame, timerange,callback){
   fs.createReadStream(originalCsv)
   .pipe(
     parse.parse({
@@ -119,7 +110,7 @@ redefine.default = function(originalCsv, cate, totalFrame, frame, callback){
   })
   .on('end', function(){
     dataExtraction(csvData, totalFrame);
-    reestablish(frame*10, totalFrame);
+    reestablish(frame*timerange, totalFrame, timerange);
     csvData = [];
     callback(refineData);
   });

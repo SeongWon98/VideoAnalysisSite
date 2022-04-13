@@ -36,10 +36,12 @@ module.exports = {
         var totalFrame = metadata.streams[0].nb_frames;
         var frame = Math.round(eval(metadata.streams[0].r_frame_rate));
         var target = req.params.cate;
-        dataRedefinder.default(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, function(refineData){
+        var timerange = req.params.timerange;
+        dataRedefinder.default(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(refineData){
           var analysisData = [{
             minute: refineData.minute,
             seconds: refineData.seconds,
+            time: refineData.time,
             count: refineData.count,
             speeds: refineData.speed,
           }];
@@ -51,13 +53,14 @@ module.exports = {
 
   /* video controls */
   makeStreamVideo: function(req,res,next){
+    var timerange = req.params.timerange;
     var filepath = `./public/videos/${req.params.videoname}.mp4`;
-    var tempDir = `./public/temp/${req.params.videoname}${req.params.times}.mp4`;
+    var tempDir = `./public/temp/${req.params.videoname}${req.params.times}_range_${timerange}.mp4`;
     var times = `${req.params.times}`*10;
     var makeVideo = new Promise((resolve, reject) =>{
       ffmpeg(filepath)
       .setStartTime(times)
-      .setDuration(10)
+      .setDuration(timerange)
       .save(tempDir)
       .on('end', function(){
         resolve();
@@ -76,7 +79,7 @@ module.exports = {
     });
   },
   streamVideo: function(req,res,next){
-    const fileName = `./public/temp/${req.params.videoname}${req.params.times}.mp4`;
+    const fileName = `./public/temp/${req.params.videoname}${req.params.times}_range_${req.params.timerange}.mp4`;
     const fileStat = fs.statSync(fileName);
     const size = fileStat.size;
     const range = req.header.range;
