@@ -12,7 +12,10 @@ module.exports = {
   main: function(req,res,next){
     res.render('setting');
   },
-
+  streamPage: function(req,res,next){
+    console.log('stream');
+    res.render('streamPage');
+  },
   /* get data */
   getVideoList: function(req,res,next){
     fs.readdir('./public/videos', function(error, filelist){
@@ -46,6 +49,26 @@ module.exports = {
             speeds: refineData.speed,
           }];
           res.json(analysisData);
+        });
+      }
+    });
+  },
+  getObjectBox: function(req, res, next){
+    var filepath = `./public/videos/${req.params.video}.mp4`;
+    console.log('bboxdata');
+    ffmpeg.ffprobe(filepath, function(err, metadata){
+      if (err) {
+        console.log("MetaData not Found. " + err);
+        res.status(err.status || 500);
+        res.render('error');
+      } else {
+        var totalFrame = metadata.streams[0].nb_frames;
+        var frame = Math.round(eval(metadata.streams[0].r_frame_rate));
+        var target = req.params.cate;
+        var timerange = req.params.timerange;
+        dataRedefinder.getBbox(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(bbox){
+          console.log('bboxdata');
+          res.json(bbox);
         });
       }
     });

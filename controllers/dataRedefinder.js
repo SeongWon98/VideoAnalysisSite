@@ -19,7 +19,7 @@ function dataExtraction(objData, max){
   var counter = Array.from({length: max}, () => 0);
   var distance = Array.from({length: max}, () => 0);
   var i = 0;
-  while(i < csvData.length){
+  while(i < objData.length){
     var data = objData[i][4].substring(1,objData[i][4].length-1);
     data = data.split(", ");
     var location = objData[i][2].replaceAll('[','');
@@ -113,6 +113,43 @@ redefine.default = function(originalCsv, cate, totalFrame, frame, timerange,call
     reestablish(frame*timerange, totalFrame, timerange);
     csvData = [];
     callback(refineData);
+  });
+}
+
+function objectFrameBbox(objData, totalFrame){
+  var bbox = Array.from({length: totalFrame}, () => '');
+  var frameBoxx = [];
+  var i=0;
+  while(i < objData.length){
+    var data = objData[i][4].substring(1,objData[i][4].length-1);
+    data = data.split(", ");
+    var box = objData[i][7].substring(2,objData[i][7].length-2);
+    box = box.split("], [");
+
+    for(var j in data){
+      if(bbox[data[j]] != '')bbox[data[j]] +=', ';
+      bbox[data[j]] += box[j];
+    }
+    i++;
+  }
+  console.log(bbox);
+  return bbox;
+}
+
+redefine.getBbox = function(originalCsv, cate, totalFrame, frame, timerange,callback){
+  fs.createReadStream(originalCsv)
+  .pipe(
+    parse.parse({
+      delimiter: ','
+    })
+  )
+  .on('data', function(dataRow){
+    if(cate == dataRow[3])csvData.push(dataRow);
+  })
+  .on('end', function(){
+    var bbox = objectFrameBbox(csvData, totalFrame);
+    csvData = [];
+    callback(bbox);
   });
 }
 

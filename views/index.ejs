@@ -20,7 +20,7 @@
       var list = videolist.split(',');
       list.forEach(function(element){
         var li = document.createElement('li');
-        var a = document.createElement('a')
+        var a = document.createElement('a');
         a.href='/analysis/'+element;
         a.innerText=element;
         li.appendChild(a);

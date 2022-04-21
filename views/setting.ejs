@@ -148,6 +148,8 @@
   getvideolist();
 
   function videoPopup(timerange, times){
+    var form = document.getElementById('setForm');
+    var cate = form.cate.value;
     var request = new XMLHttpRequest();
     var graphDiv = document.getElementById('graph_div');
     var path = `${window.location.pathname}`;
@@ -155,7 +157,7 @@
     request.open('GET',`/videopart/video/${path}/time/${times}/timerange/${timerange}`, true);
     request.onreadystatechange = function(){
       if(request.readyState == 4 && request.status==200){
-        window.open(`/video/${path}/time/${times}/timerange/${timerange}`, "a", "width=1200, height=900, left=100, top=50");
+        window.open(`/stream/${path}/cate/${cate}/time/${times}/timerange/${timerange}`, "a", "width=1920, height=1080, left=100, top=50");
       }
     }
     request.send();
