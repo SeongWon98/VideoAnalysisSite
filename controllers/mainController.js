@@ -1,6 +1,7 @@
 var express = require('express');
 var fs = require('fs');
 var ffmpeg = require('fluent-ffmpeg');
+var fft = require('fft-js').fft;
 var categoryFinder = require('./categoryFinder.js');
 var dataRedefinder = require('./dataRedefinder.js');
 
@@ -41,13 +42,18 @@ module.exports = {
         var target = req.params.cate;
         var timerange = req.params.timerange;
         dataRedefinder.default(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(refineData){
+          var signal = [1,0,1,0];
+          var fftspeed = fft(signal);
           var analysisData = [{
             minute: refineData.minute,
             seconds: refineData.seconds,
             time: refineData.time,
             count: refineData.count,
             speeds: refineData.speed,
+            fftspeed: fftspeed,
           }];
+          console.log(fftspeed);
+
           res.json(analysisData);
         });
       }
@@ -55,7 +61,6 @@ module.exports = {
   },
   getObjectBox: function(req, res, next){
     var filepath = `./public/videos/${req.params.video}.mp4`;
-    console.log('bboxdata');
     ffmpeg.ffprobe(filepath, function(err, metadata){
       if (err) {
         console.log("MetaData not Found. " + err);
@@ -64,10 +69,10 @@ module.exports = {
       } else {
         var totalFrame = metadata.streams[0].nb_frames;
         var frame = Math.round(eval(metadata.streams[0].r_frame_rate));
+        var time = req.params.times;
         var target = req.params.cate;
         var timerange = req.params.timerange;
-        dataRedefinder.getBbox(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(bbox){
-          console.log('bboxdata');
+        dataRedefinder.getBbox(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, time, timerange,function(bbox){
           res.json(bbox);
         });
       }
@@ -79,7 +84,7 @@ module.exports = {
     var timerange = req.params.timerange;
     var filepath = `./public/videos/${req.params.videoname}.mp4`;
     var tempDir = `./public/temp/${req.params.videoname}${req.params.times}_range_${timerange}.mp4`;
-    var times = `${req.params.times}`*10;
+    var times = `${req.params.times}`* timerange;
     var makeVideo = new Promise((resolve, reject) =>{
       ffmpeg(filepath)
       .setStartTime(times)

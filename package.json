@@ -12,6 +12,7 @@
     "ejs": "~2.6.1",
     "express": "~4.16.1",
     "ffmpeg": "^0.0.4",
+    "fft-js": "^0.0.12",
     "fluent-ffmpeg": "^2.1.2",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",

@@ -4,49 +4,63 @@
   <title>Stream video</title>
 </head>
 <body>
+  <video id="video" width="5%" autoplay muted ></video>
   <canvas id="canvas" width="1920" height="1080"></canvas>
-  <video id="video" autoplay muted ></video>
 
   <script type="text/javascript">
+  var video = document.getElementById('video');
+  var canvas = document.getElementById('canvas');
+  var path = `${window.location.pathname}`;
+  path = path.replace('/stream','/video');
+  video.src=path;
+    function drawBbox(bbox){
+      var ctx = canvas.getContext('2d');
+
+      var canvasInterval = null;
+      var i = 0;
+      function drawImage() {
+        ctx.drawImage(video, 0, 0, 1920, 1080);
+        var box = bbox[i++].split(", ");
+        if(bbox.length <= i)i=0;
+        ctx.beginPath();
+        ctx.lineWidth = "3";
+        ctx.strokeStyle = "red";
+        for(var j = 0; j < box.length; j++){
+          ctx.rect(box[j++], box[j++], box[j++], box[j]);
+        }
+        ctx.stroke();
+      };
+      canvasInterval = window.setInterval(() => {
+        drawImage(video);
+      }, 1000 / 15);
+      video.onpause = function() {
+        clearInterval(canvasInterval);
+      };
+      video.onended = function() {
+        clearInterval(canvasInterval);
+      };
+      video.onplay = function() {
+        clearInterval(canvasInterval);
+        canvasInterval = window.setInterval(() => {
+          drawImage(video);
+        }, 1000 / 15);
+      };
+    }
     function boxData(){
       var req = new XMLHttpRequest();
       var path = `${window.location.pathname}`;
       path = path.replace('/stream','/objectBox');
-      console.log(path);
       req.open('GET',`${path}`, true);
       req.responseType='json';
       req.onload = ()=>{
-        console.log(response[0].bbox);
+        drawBbox(req.response);
       }
       req.send();
     }
     boxData();
-    var video = document.getElementById('video');
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    var path = `${window.location.pathname}`;
-    path = path.replace('/stream','/video');
-    video.src=path;
-    var canvasInterval = null;
-    var i = 0;
-    function drawImage() {
-      canvas.getContext('2d', { alpha: false }).drawImage(video, 0, 0, 1920, 1080);
-    };
-    canvasInterval = window.setInterval(() => {
-      drawImage(video);
-    }, 1000 / 15);
-    video.onpause = function() {
-      clearInterval(canvasInterval);
-    };
-    video.onended = function() {
-      clearInterval(canvasInterval);
-    };
-    video.onplay = function() {
-      clearInterval(canvasInterval);
-      canvasInterval = window.setInterval(() => {
-        drawImage(video);
-      }, 1000 / 15);
-    };
+
+
+
   </script>
 </body>
 </html>

@@ -132,11 +132,10 @@ function objectFrameBbox(objData, totalFrame){
     }
     i++;
   }
-  console.log(bbox);
   return bbox;
 }
 
-redefine.getBbox = function(originalCsv, cate, totalFrame, frame, timerange,callback){
+redefine.getBbox = function(originalCsv, cate, totalFrame, frame, time, timerange,callback){
   fs.createReadStream(originalCsv)
   .pipe(
     parse.parse({
@@ -148,8 +147,10 @@ redefine.getBbox = function(originalCsv, cate, totalFrame, frame, timerange,call
   })
   .on('end', function(){
     var bbox = objectFrameBbox(csvData, totalFrame);
+    var start = frame+12+time * timerange * frame;
+    var end = frame+12+time * timerange * frame + timerange* frame;
     csvData = [];
-    callback(bbox);
+    callback(bbox.slice(start, end));
   });
 }
 
