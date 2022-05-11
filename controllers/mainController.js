@@ -52,7 +52,7 @@ module.exports = {
             speeds: refineData.speed,
             fftspeed: fftspeed,
           }];
-          console.log(fftspeed);
+          // console.log(fftspeed);
 
           res.json(analysisData);
         });
@@ -85,6 +85,7 @@ module.exports = {
     var filepath = `./public/videos/${req.params.videoname}.mp4`;
     var tempDir = `./public/temp/${req.params.videoname}${req.params.times}_range_${timerange}.mp4`;
     var times = `${req.params.times}`* timerange;
+    console.log("times: "+times);
     var makeVideo = new Promise((resolve, reject) =>{
       ffmpeg(filepath)
       .setStartTime(times)

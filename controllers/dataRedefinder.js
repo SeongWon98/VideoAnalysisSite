@@ -125,7 +125,6 @@ function objectFrameBbox(objData, totalFrame){
     data = data.split(", ");
     var box = objData[i][7].substring(2,objData[i][7].length-2);
     box = box.split("], [");
-
     for(var j in data){
       if(bbox[data[j]] != '')bbox[data[j]] +=', ';
       bbox[data[j]] += box[j];
@@ -147,8 +146,9 @@ redefine.getBbox = function(originalCsv, cate, totalFrame, frame, time, timerang
   })
   .on('end', function(){
     var bbox = objectFrameBbox(csvData, totalFrame);
-    var start = frame+12+time * timerange * frame;
-    var end = frame+12+time * timerange * frame + timerange* frame;
+    var start = parseInt(time*1.5/timerange)+time * timerange * frame;
+    var end = parseInt(time*1.5/timerange)+time * timerange * frame + timerange* frame;
+    console.log("time: "+time+" start: "+start+" end: "+end +" length: "+bbox.length);
     csvData = [];
     callback(bbox.slice(start, end));
   });
