@@ -1,7 +1,7 @@
 var express = require('express');
 var fs = require('fs');
 var ffmpeg = require('fluent-ffmpeg');
-var fft = require('fft-js').fft;
+var FFT = require('@neurosity/dsp');
 var categoryFinder = require('./categoryFinder.js');
 var dataRedefinder = require('./dataRedefinder.js');
 
@@ -42,16 +42,17 @@ module.exports = {
         var target = req.params.cate;
         var timerange = req.params.timerange;
         dataRedefinder.default(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(refineData){
-          var signal = [1,0,1,0];
-          var fftspeed = fft(signal);
+
           var analysisData = [{
             minute: refineData.minute,
             seconds: refineData.seconds,
             time: refineData.time,
             count: refineData.count,
             speeds: refineData.speed,
-            fftspeed: fftspeed,
           }];
+          for(var i =0 ; i <refineData.speed; i++ ){
+            console.log(refineData.speed[i]);
+          }
           // console.log(fftspeed);
 
           res.json(analysisData);
