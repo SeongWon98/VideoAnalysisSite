@@ -40,16 +40,20 @@ function dataExtraction(objData, max){
         idxY++;
       }
     }
-
+    var acc = objData[i][2].replaceAll('[','');
+    acc = acc.replaceAll(']','');
+    acc= acc.split(',');
     for(var j in data){
       // 출현한 프레임
-      if(data[j]==2)counter[0]++;
-      counter[data[j]-1]++;
-      // 각프레임을 간격으로 이동거리 구하기
-      if(locX[j-1]>0 && locY[j-1]>0){
-        let temp = Math.abs(locX[j-1] - locX[j]) + Math.abs(locY[j-1] - locY[j]);
-        temp = parseInt(temp);
-        distance[data[j]-2] += temp;
+      if(acc[j]>0.90){
+        if(data[j]==2)counter[0]++;
+        counter[data[j]-1]++;
+        // 각프레임을 간격으로 이동거리 구하기
+        if(locX[j-1]>0 && locY[j-1]>0){
+          let temp = Math.abs(locX[j-1] - locX[j]) + Math.abs(locY[j-1] - locY[j]);
+          temp = parseInt(temp);
+          distance[data[j]-2] += temp;
+        }
       }
     }
     i++;
@@ -125,9 +129,14 @@ function objectFrameBbox(objData, totalFrame){
     data = data.split(", ");
     var box = objData[i][7].substring(2,objData[i][7].length-2);
     box = box.split("], [");
+    var acc = objData[i][2].replaceAll('[','');
+    acc = acc.replaceAll(']','');
+    acc= acc.split(',');
     for(var j in data){
-      if(bbox[data[j]] != '')bbox[data[j]] +=', ';
-      bbox[data[j]] += box[j];
+      if(acc[j]> 0.90){
+        if(bbox[data[j]] != '')bbox[data[j]] +=', ';
+        bbox[data[j]] += box[j];
+      }
     }
     i++;
   }
@@ -148,7 +157,6 @@ redefine.getBbox = function(originalCsv, cate, totalFrame, frame, time, timerang
     var bbox = objectFrameBbox(csvData, totalFrame);
     var start = parseInt(time*1.5/timerange)+time * timerange * frame;
     var end = parseInt(time*1.5/timerange)+time * timerange * frame + timerange* frame;
-    console.log("time: "+time+" start: "+start+" end: "+end +" length: "+bbox.length);
     csvData = [];
     callback(bbox.slice(start, end));
   });

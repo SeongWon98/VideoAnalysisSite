@@ -31,10 +31,34 @@
     </form>
   </div>
   <hr>
+
   <div class="graph_div" id="graph_div">
+    <label for="counterExcess">counter:</label>
+    <input type="text" id="counterExcess" name="counterExcess" required minlength="4" maxlength="8" size="10" onclick="clickCheckInput()">
+    <label for="speedExcess">speed:</label>
+    <input type="text" id="speedExcess" name="speedExcess" required minlength="4" maxlength="8" size="10" onclick="clickCheckInput()">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <label for="fiveper">Top 5%</label>
+    <input type="checkbox" id="fiveper" onclick="clickCheck(this)">
+    <label for="tenper">Top 10%</label>
+    <input type="checkbox" id="tenper" onclick="clickCheck(this)">
+    <label for="fifper">Top 15%</label>
+    <input type="checkbox" id="fifper" onclick="clickCheck(this)">
   </div>
 
   <script>
+  function clickCheckInput() {
+    document.querySelectorAll(`input[type=checkbox]`)
+    .forEach(el => el.checked = false);
+  }
+  function clickCheck(target) {
+    document.querySelectorAll(`input[type=checkbox]`)
+    .forEach(el => el.checked = false);
+    target.checked = true;
+    document.getElementById(`counterExcess`).value='';
+    document.getElementById(`speedExcess`).value='';
+  }
+
   function getvideolist(){
     var req = new XMLHttpRequest();
     req.open('GET','/videolist', true);
@@ -77,11 +101,12 @@
     }
     req.send();
   }
-
-  function drawChart(time, label, data, cate){
+  var chartNum = 0;
+  function drawChart(time, label, data, cate, type){
     var graphDiv = document.getElementById('graph_div');
     var graphCvs = document.createElement('canvas');
     graphCvs.height = 50;
+    var pointBackgroundColors=[];
     var chart = new Chart(graphCvs, {
       type: 'line',
       data: {
@@ -93,7 +118,8 @@
             'rgba(180, 180, 255, 1)',
           ],
           borderWidth: 1,
-          pointRadius: 1.5
+          pointRadius: 3,
+          pointBackgroundColor:pointBackgroundColors
         }]
       },
       options: {
@@ -103,6 +129,23 @@
             var timerange = parseInt(timesplit[0]*60) + parseInt(timesplit[1]);
             videoPopup(timerange, event[0].index, cate);
           }
+          else{
+            var excess = 0
+            if(type == 0){ excess = document.getElementById('counterExcess').value;}
+            else {excess = document.getElementById('speedExcess').value;}
+            for (i = 0; i < chart.data.datasets[0].data.length; i++) {
+              pointBackgroundColors.pop();
+            }
+            for (i = 0; i < chart.data.datasets[0].data.length; i++) {
+              if (chart.data.datasets[0].data[i] > excess) {
+                pointBackgroundColors.push("rgba(255, 0, 0, 1)");
+              }else {
+                pointBackgroundColors.push("rgba(180, 180, 255, 1)");
+              }
+            }
+            chart.update();
+          }
+
         },
         scales: {
           y: {
@@ -114,82 +157,7 @@
     graphDiv.appendChild(graphCvs);
   }
 
-  function fft(data, label, cate){
-    function fft2(X) {
-      var N = X.length;
-      if (N <= 1) {
-        return X;
-      }
-      var M = N/2;
-      var even = [];
-      var odd = [];
-      even.length = M;
-      odd.length = M;
-      for (var i = 0; i < M; ++i) {
-        even[i] = X[i*2];
-        odd[i] = X[i*2+1];
-      }
-      even = fft2(even);
-      odd = fft2(odd);
-      var a = -2*math.pi;
-      for (var k = 0; k < M; ++k) {
-        // t = exp(-2PI*i*k/N) * X_{k+N/2} (in two steps)
-        var t = math.exp(math.complex(0, a*k/N));
-        t = math.multiply(t, odd[k]);
-        X[k] = odd[k] = math.add(even[k], t);
-        X[k+M] = even[k] = math.subtract(even[k], t);
-      }
-      return X;
-    }
-    // generate linear space from A to B with S intervals
-    function linspace(A,B,S) {
-      var Y = new Array(0);
-      var D = (B-A)/(S-1);
-      for (var i = A; i <= B; i+=D) {
-        Y.push(i);
-      }
-      return Y;
-    }
 
-    // perhaps not necessary, but just preventing errors with mixing reals and
-    // complex numbers
-    function make_complex(X) {
-      for (var i = 0; i < X.length; i++) {
-        X[i] = math.complex(X[i],0);
-      }
-    }
-
-    function calc_function(T) {
-      var X = [];
-      X.length = T.length;
-      for (var t = 0; t < T.length; t++) {
-        X[t] = math.sin(2*math.pi*T[t]);
-      }
-      return X;
-    }
-
-    var T = linspace(0,data.length,128);
-
-    var X = calc_function(T);
-    make_complex(X);
-
-    var Y = fft2(X);
-
-    // get only real part, should have a Dirac spike at sine freq
-    var Yr = data;
-    var time = [];
-    time.length = Yr.length;
-    Yr.length = Y.length;
-    for (var i = 0; i < Y.length; i++) {
-      Yr[i] = Y[i].re;
-      time[i] = i;
-    }
-    var graphDiv = document.getElementById('graph_div');
-    var target = document.createElement('h3');
-    target.innerText = `${cate} fft`;
-    graphDiv.appendChild(target);
-    drawChart(time,label,Yr);
-  }
 
   function chartMaker(){
     event.preventDefault();
@@ -218,9 +186,6 @@
             datasets: [{
               label: '수',
               data: req.response[0].count,
-              borderColor: [
-                'rgba(180, 180, 255, 1)',
-              ],
               borderWidth: 1,
               pointRadius: 1.5
             },
@@ -256,17 +221,17 @@
         var target = document.createElement('h3');
         target.innerText = `${cate} counter`;
         graphDiv.appendChild(target);
-        drawChart(req.response[0].time,label,req.response[0].count,cate);
-        fft(req.response[0].count, label,cate);
+        drawChart(req.response[0].time,label,req.response[0].count,cate, 0);
+        // fft(req.response[0].count, label,cate);
       }
       else if(speedCheck){
         var label = '속도';
         var target = document.createElement('h3');
         target.innerText = `${cate} speeds`;
         graphDiv.appendChild(target);
-        drawChart(req.response[0].time,label,req.response[0].speeds);
-        console.log(req.response[0].speeds.length,cate);
-        fft(req.response[0].speeds, label, cate);
+        drawChart(req.response[0].time,label,req.response[0].speeds,1);
+        // console.log(req.response[0].speeds.length,cate);
+        // fft(req.response[0].speeds, label, cate);
         var text = document.createElement('textarea');
         text.innerText = req.response[0].speeds;
         graphDiv.appendChild(text);

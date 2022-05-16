@@ -42,7 +42,6 @@ module.exports = {
         var target = req.params.cate;
         var timerange = req.params.timerange;
         dataRedefinder.default(`./public/videodatas/${req.params.video}.csv`, target, totalFrame, frame, timerange,function(refineData){
-
           var analysisData = [{
             minute: refineData.minute,
             seconds: refineData.seconds,
@@ -50,11 +49,6 @@ module.exports = {
             count: refineData.count,
             speeds: refineData.speed,
           }];
-          for(var i =0 ; i <refineData.speed; i++ ){
-            console.log(refineData.speed[i]);
-          }
-          // console.log(fftspeed);
-
           res.json(analysisData);
         });
       }
