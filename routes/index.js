@@ -17,5 +17,6 @@ router.get('/objectBox/:video/cate/:cate/time/:times/timerange/:timerange', cont
 /* video */
 router.get('/videopart/video/:videoname/time/:times/timerange/:timerange', controller.makeStreamVideo);
 router.get('/video/:videoname/cate/:cate/time/:times/timerange/:timerange', controller.streamVideo);
+router.get('/image/:videoname', controller.thumnailImg);
 
 module.exports = router;

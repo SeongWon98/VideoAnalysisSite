@@ -10,13 +10,13 @@
   <ul class='nav' id='vList'>
   </ul>
   <hr>
-  <div class="set_div">
+  <div class="set">
     <h3>setting</h3>
     <form class="setForm" id="setForm" onsubmit="chartMaker(event)">
       <label for="cate">choose object : </label>
       <select id="cate" name="cate"></select>
       <br>
-      <label for="range">choose time range : </label>
+      <label for="range">set seconds : </label>
       <select id="range" name="range">
         <option value=10>10</option>
         <option value=30>30</option>
@@ -30,6 +30,13 @@
       <button type="submit" name="set">set</button>
     </form>
   </div>
+  <div class="player">
+    <canvas id="canvas" width="480" height="270"></canvas>
+    <br>
+    <button id="play">Play</button>
+    <button id="pause">Pause</button>
+  </div>
+
   <hr>
 
   <div class="graph_div" id="graph_div">
@@ -37,16 +44,34 @@
     <input type="text" id="counterExcess" name="counterExcess" required minlength="4" maxlength="8" size="10" onclick="clickCheckInput()">
     <label for="speedExcess">speed:</label>
     <input type="text" id="speedExcess" name="speedExcess" required minlength="4" maxlength="8" size="10" onclick="clickCheckInput()">
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <label for="fiveper">Top 5%</label>
     <input type="checkbox" id="fiveper" onclick="clickCheck(this)">
+    &nbsp;&nbsp;
     <label for="tenper">Top 10%</label>
     <input type="checkbox" id="tenper" onclick="clickCheck(this)">
+    &nbsp;&nbsp;
     <label for="fifper">Top 15%</label>
     <input type="checkbox" id="fifper" onclick="clickCheck(this)">
   </div>
 
   <script>
+
+  var video = document.createElement('video');
+  var canvas=document.getElementById ("canvas");
+  var context=canvas.getContext("2d");
+  var img = new Image (); //이미지 객체 생성
+
+  var imgpath = `${window.location.pathname}`;
+  imgpath = imgpath.replace('/analysis','/image');
+  img.src = imgpath; //code.jpg라는 이미지 파일을 로딩 시작
+  img.onload = function() //이미지 로딩 완료시 실행되는 함수
+  {
+    context.drawImage (img,0,0,480,270);
+    //(20,20)을 중심으로 100*100의 사이즈로 이미지를 그림 context. drawImage (img,20,20,100,100)
+  }
+
+
   function clickCheckInput() {
     document.querySelectorAll(`input[type=checkbox]`)
     .forEach(el => el.checked = false);
@@ -55,8 +80,8 @@
     document.querySelectorAll(`input[type=checkbox]`)
     .forEach(el => el.checked = false);
     target.checked = true;
-    document.getElementById(`counterExcess`).value='';
-    document.getElementById(`speedExcess`).value='';
+    document.getElementById('counterExcess').value='';
+    document.getElementById('speedExcess').value='';
   }
 
   function getvideolist(){
@@ -101,12 +126,50 @@
     }
     req.send();
   }
-  var chartNum = 0;
-  function drawChart(time, label, data, cate, type){
+  function playerClear(status){
+    var canvas = document.getElementById("canvas");
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    var ctx = canvas.getContext("2d");
+    ctx.textAlign = 'center';
+    ctx.Baseline = 'middle';
+    ctx.font = "30px Arial";
+    ctx.fillText(status, 240, 135);
+  }
+  function firstPointColor(len, pointBackgroundColors, color){
+    for (i = 0; i < len; i++) {
+      pointBackgroundColors.push(color);
+    }
+  }
+  function chartPointColor(data, pointBackgroundColors, excess, color){
+    for (i = 0; i < data.length; i++) {
+      pointBackgroundColors.pop();
+    }
+    for (i = 0; i < data.length; i++) {
+      if (data[i] >= excess) {
+        if(color=='rgba(180, 180, 255, 1)')pointBackgroundColors.push("rgba(255, 0, 0, 1)");
+        else if(color=='rgba(255, 180, 180, 1)')pointBackgroundColors.push("rgba(0, 0, 255, 1)");
+      }else {
+        pointBackgroundColors.push(color);
+      }
+    }
+  }
+  function getSortedArr(arr, top){
+    var result=[];
+    for(var i in arr){
+      result.push(arr[i]);
+    }
+    result.sort((first, second)=>{
+      return second - first;
+    });
+    top = parseInt(arr.length*top/100);
+    return result[top];
+  }
+  function drawChart(time, label, data, cate, type, color){
     var graphDiv = document.getElementById('graph_div');
     var graphCvs = document.createElement('canvas');
     graphCvs.height = 50;
     var pointBackgroundColors=[];
+    firstPointColor(data.length, pointBackgroundColors, color);
     var chart = new Chart(graphCvs, {
       type: 'line',
       data: {
@@ -114,9 +177,7 @@
         datasets: [{
           label: label,
           data: data,
-          borderColor: [
-            'rgba(180, 180, 255, 1)',
-          ],
+          borderColor: color,
           borderWidth: 1,
           pointRadius: 3,
           pointBackgroundColor:pointBackgroundColors
@@ -125,27 +186,23 @@
       options: {
         onClick: function(point, event){
           if(event.length == 1){
+            playerClear('Loding...');
             var timesplit = time[0].split(':');
             var timerange = parseInt(timesplit[0]*60) + parseInt(timesplit[1]);
+            video.src = null;
             videoPopup(timerange, event[0].index, cate);
+
           }
           else{
             var excess = 0
-            if(type == 0){ excess = document.getElementById('counterExcess').value;}
-            else {excess = document.getElementById('speedExcess').value;}
-            for (i = 0; i < chart.data.datasets[0].data.length; i++) {
-              pointBackgroundColors.pop();
-            }
-            for (i = 0; i < chart.data.datasets[0].data.length; i++) {
-              if (chart.data.datasets[0].data[i] > excess) {
-                pointBackgroundColors.push("rgba(255, 0, 0, 1)");
-              }else {
-                pointBackgroundColors.push("rgba(180, 180, 255, 1)");
-              }
-            }
+            if(document.getElementById('fiveper').checked)excess = getSortedArr(data, 5);
+            else if(document.getElementById('tenper').checked)excess = getSortedArr(data, 10);
+            else if(document.getElementById('fifper').checked)excess = getSortedArr(data, 15);
+            else if(type == 0)excess = document.getElementById('counterExcess').value;
+            else if(type == 1)excess = document.getElementById('speedExcess').value;
+            chartPointColor(chart.data.datasets[0].data, pointBackgroundColors, excess, color);
             chart.update();
           }
-
         },
         scales: {
           y: {
@@ -179,6 +236,10 @@
         var graphDiv = document.getElementById('graph_div');
         var graphCvs = document.createElement('canvas');
         graphCvs.height = 50;
+        var pointBackgroundColors=[];
+        firstPointColor(req.response[0].count.length, pointBackgroundColors, "rgba(180, 180, 255, 1)");
+        var pointBackgroundColors1=[];
+        firstPointColor(req.response[0].speeds.length, pointBackgroundColors1, "rgba(255, 180, 180, 1)");
         var chart = new Chart(graphCvs, {
           type: 'line',
           data: {
@@ -187,24 +248,50 @@
               label: '수',
               data: req.response[0].count,
               borderWidth: 1,
-              pointRadius: 1.5
+              borderColor: [
+                'rgba(180, 180, 255, 1)',
+              ],
+              pointRadius: 2,
+              pointBackgroundColor:pointBackgroundColors
             },
             {
               label: '속도',
               data: req.response[0].speeds,
-              borderColor: [
-                'rgba(255, 180, 180, 1)',
-              ],
               borderWidth: 1,
-              pointRadius: 1.5
+              borderColor: ['rgba(255, 180, 180, 1)',],
+              pointRadius: 2,
+              pointBackgroundColor:pointBackgroundColors1
             }]
           },
           options: {
             onClick: function(point, event){
               if(event.length == 1){
+                playerClear('Loding...');
                 var timesplit = req.response[0].time[0].split(':');
                 var timerange = parseInt(timesplit[0]*60) + parseInt(timesplit[1]);
+                video.src = null;
                 videoPopup(timerange, event[0].index, cate);
+              }
+              else{
+                var excess = 0
+                if(document.getElementById('fiveper').checked){
+                  chartPointColor(chart.data.datasets[0].data, pointBackgroundColors, getSortedArr(chart.data.datasets[0].data, 5), "rgba(180, 180, 255, 1)");
+                  chartPointColor(chart.data.datasets[1].data, pointBackgroundColors1, getSortedArr(chart.data.datasets[1].data, 5), "rgba(255, 180, 180, 1)");
+                }
+                else if(document.getElementById('tenper').checked){
+                  chartPointColor(chart.data.datasets[0].data, pointBackgroundColors, getSortedArr(chart.data.datasets[0].data, 10), "rgba(180, 180, 255, 1)");
+                  chartPointColor(chart.data.datasets[1].data, pointBackgroundColors1, getSortedArr(chart.data.datasets[1].data, 10), "rgba(255, 180, 180, 1)");
+                }
+                else if(document.getElementById('fifper').checked){
+                  chartPointColor(chart.data.datasets[0].data, pointBackgroundColors, getSortedArr(chart.data.datasets[0].data, 15), "rgba(180, 180, 255, 1)");
+                  chartPointColor(chart.data.datasets[1].data, pointBackgroundColors1, getSortedArr(chart.data.datasets[1].data, 15), "rgba(255, 180, 180, 1)");
+                }
+                else {
+                  chartPointColor(chart.data.datasets[0].data, pointBackgroundColors, document.getElementById('counterExcess').value, "rgba(180, 180, 255, 1)");
+                  chartPointColor(chart.data.datasets[1].data, pointBackgroundColors1, document.getElementById('speedExcess').value, "rgba(255, 180, 180, 1)");
+                }
+
+                chart.update();
               }
             },
             scales: {
@@ -221,7 +308,7 @@
         var target = document.createElement('h3');
         target.innerText = `${cate} counter`;
         graphDiv.appendChild(target);
-        drawChart(req.response[0].time,label,req.response[0].count,cate, 0);
+        drawChart(req.response[0].time,label,req.response[0].count,cate, 0,'rgba(180, 180, 255, 1)');
         // fft(req.response[0].count, label,cate);
       }
       else if(speedCheck){
@@ -229,12 +316,12 @@
         var target = document.createElement('h3');
         target.innerText = `${cate} speeds`;
         graphDiv.appendChild(target);
-        drawChart(req.response[0].time,label,req.response[0].speeds,1);
+        drawChart(req.response[0].time,label,req.response[0].speeds,cate, 1,'rgba(255, 180, 180, 1)');
         // console.log(req.response[0].speeds.length,cate);
         // fft(req.response[0].speeds, label, cate);
-        var text = document.createElement('textarea');
-        text.innerText = req.response[0].speeds;
-        graphDiv.appendChild(text);
+        // var text = document.createElement('textarea');
+        // text.innerText = req.response[0].speeds;
+        // graphDiv.appendChild(text);
       }
     }
     req.send();
@@ -242,7 +329,6 @@
 
   addOption();
   getvideolist();
-
   function videoPopup(timerange, times, cate){
     var form = document.getElementById('setForm');
     var request = new XMLHttpRequest();
@@ -252,7 +338,66 @@
     request.open('GET',`/videopart/video/${path}/time/${times}/timerange/${timerange}`, true);
     request.onreadystatechange = function(){
       if(request.readyState == 4 && request.status==200){
-        window.open(`/stream/${path}/cate/${cate}/time/${times}/timerange/${timerange}`, "a", "width=1920, height=1080, left=100, top=50");
+        // window.open(`/stream/${path}/cate/${cate}/time/${times}/timerange/${timerange}`, "a", "width=1920, height=1080, left=100, top=50");
+
+        var path = `${window.location.pathname}`;
+        path = path.replace('/analysis','/video');
+        path = path+`/cate/${cate}/time/${times}/timerange/${timerange}`
+        video.src=path;
+
+        var canvasInterval = window.setInterval(() => {
+          // drawImage(video);
+
+          if(video.src == null)return;
+        }, 1000 / 15);
+
+        var req = new XMLHttpRequest();
+        path = path.replace('/video','/objectBox');
+        req.open('GET',`${path}`, true);
+        req.responseType='json';
+        req.onload = ()=>{
+          playerClear('Press Play');
+          drawBbox(req.response);
+        }
+        req.send();
+
+        document.getElementById('play').addEventListener('click', function () {
+          video.play();
+        });
+        document.getElementById('pause').addEventListener('click', function () {
+          video.pause();
+        });
+
+        var canvas = document.getElementById('canvas');
+        function drawBbox(bbox){
+          var i = 0;
+          function drawImage() {
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, 480, 270);
+            var box = bbox[i++].split(", ");
+            if(bbox.length <= i)i=0;
+            ctx.beginPath();
+            ctx.lineWidth = "3";
+            ctx.strokeStyle = "red";
+            for(var j = 0; j < box.length; j++){
+              ctx.rect(parseInt(box[j++]/4), parseInt(box[j++]/4), parseInt(box[j++]/4), parseInt(box[j]/4));
+            }
+            ctx.stroke();
+          };
+          video.onpause = function() {
+            clearInterval(canvasInterval);
+            return;
+          };
+          video.onended = function() {
+            clearInterval(canvasInterval);
+          };
+          video.onplay = function() {
+            clearInterval(canvasInterval);
+            canvasInterval = window.setInterval(() => {
+              drawImage();
+            }, 1000/15);
+          };
+        }
       }
     }
     request.send();

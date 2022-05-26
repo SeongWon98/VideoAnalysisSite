@@ -137,5 +137,13 @@ module.exports = {
       // 스트림을 만들고 응답에 실어보냄
       fs.createReadStream(fileName).pipe(res);
     }
+  },
+  thumnailImg: function(req, res, next){
+    const fileName = `./public/images/${req.params.videoname}.PNG`;
+    fs.readFile(fileName, function(err, data){
+      res.writeHead(200);
+      res.write(data);
+      res.end();
+    });
   }
 }

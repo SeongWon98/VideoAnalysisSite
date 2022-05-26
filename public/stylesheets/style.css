@@ -6,7 +6,13 @@ body {
 a {
   color: #00B7FF;
 }
-
+#canvas {
+  background-color: gray;
+}
+div {
+  display: inline-block;
+  position: relative;
+}
 .nav {
   list-style: none;
   padding-left: 0;
@@ -17,15 +23,22 @@ a {
 }
 
 .set_div {
-  width: 30%;
-  height: 13em;
-  justify-content: center;
-}
 
+}
+.set {
+  width: 30%;
+  top:-150px;
+}
+.player {
+  right:-400px;
+}
 .set_from {
   margin: 1 auto;
 }
 
 .set_form input[type=text] {
   display: none;
+}
+.graph_div {
+  width:100%;
 }

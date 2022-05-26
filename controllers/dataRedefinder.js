@@ -45,7 +45,7 @@ function dataExtraction(objData, max){
     acc= acc.split(',');
     for(var j in data){
       // 출현한 프레임
-      if(acc[j]>0.90){
+      if(acc[j]>0.98){
         if(data[j]==2)counter[0]++;
         counter[data[j]-1]++;
         // 각프레임을 간격으로 이동거리 구하기
@@ -133,7 +133,7 @@ function objectFrameBbox(objData, totalFrame){
     acc = acc.replaceAll(']','');
     acc= acc.split(',');
     for(var j in data){
-      if(acc[j]> 0.90){
+      if(acc[j]> 0.98){
         if(bbox[data[j]] != '')bbox[data[j]] +=', ';
         bbox[data[j]] += box[j];
       }
