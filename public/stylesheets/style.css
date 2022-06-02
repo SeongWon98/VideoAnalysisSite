@@ -10,8 +10,8 @@ a {
   background-color: gray;
 }
 div {
-  display: inline-block;
-  position: relative;
+  /* display: inline-block; */
+  /* position: relative; */
 }
 .nav {
   list-style: none;
@@ -22,23 +22,33 @@ div {
   margin-right: 1em;
 }
 
-.set_div {
-
+.set_player {
+  display: flex;
+  justify-content: space-between;
+  width:auto;
+  height:auto;
 }
 .set {
-  width: 30%;
-  top:-150px;
+  /* position:static; */
+  /* display: inline-block; */
+  /* float:left; */
+  width: 15%;
+  /* top:-150px; */
+  height: auto;
 }
 .player {
-  right:-400px;
+  /* float:right; */
+
+  /* display: inline-block; */
 }
-.set_from {
+.setForm {
   margin: 1 auto;
+  height: 150px;
+  /* background-color: pink; */
+}
+.detail {
 }
 
-.set_form input[type=text] {
-  display: none;
-}
 .graph_div {
-  width:100%;
+  display: block;
 }

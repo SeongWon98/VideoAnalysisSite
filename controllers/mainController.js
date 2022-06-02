@@ -4,6 +4,7 @@ var ffmpeg = require('fluent-ffmpeg');
 var FFT = require('@neurosity/dsp');
 var categoryFinder = require('./categoryFinder.js');
 var dataRedefinder = require('./dataRedefinder.js');
+var dataRedefinderV2 = require('./dataRedefinderV2.js');
 
 module.exports = {
   /* GET home page. */
@@ -54,6 +55,31 @@ module.exports = {
       }
     });
   },
+  getObjectData_: function(req,res,next){
+    var filepath = `./public/videos/${req.body.video}.mp4`;
+    ffmpeg.ffprobe(filepath, function(err, metadata){
+      if (err) {
+        console.log("MetaData not Found. " + err);
+        res.status(err.status || 500);
+        res.render('error');
+      } else {
+        var totalFrame = metadata.streams[0].nb_frames;
+        var frame = Math.round(eval(metadata.streams[0].r_frame_rate));
+        var target = req.body.cate;
+        var timerange = req.body.timerange;
+        dataRedefinderV2.default(`./public/videodatas/${req.body.video}.csv`, target, totalFrame, frame, timerange,function(refineData){
+          refineData.video=req.body.video;
+          refineData.cate=target;
+          refineData.timerange=req.body.timerange;
+          refineData.wantNum=req.body.wantNum;
+          refineData.speedCheck=req.body.speedCheck;
+          refineData.counterCheck=req.body.counterCheck;
+          res.json(refineData);
+        });
+      }
+    });
+    console.log(req.body.cate);
+  },
   getObjectBox: function(req, res, next){
     var filepath = `./public/videos/${req.params.video}.mp4`;
     ffmpeg.ffprobe(filepath, function(err, metadata){
@@ -73,13 +99,37 @@ module.exports = {
       }
     });
   },
+  getBoundingData: function(req, res, next){
+    console.log(req.body);
+    var filepath = `./public/videos/${req.body.video}.mp4`;
+    ffmpeg.ffprobe(filepath, function(err, metadata){
+      if (err) {
+        console.log("MetaData not Found. " + err);
+        res.status(err.status || 500);
+        res.render('error');
+      } else {
+        var redu = metadata.streams[0].width / 480;
+        var totalFrame = metadata.streams[0].nb_frames;
+        var frame = Math.round(eval(metadata.streams[0].r_frame_rate));
+        var time = req.body.times;
+        var target = req.body.cate;
+        var timerange = req.body.timerange;
+        dataRedefinderV2.getBbox(`./public/videodatas/${req.body.video}.csv`, target, totalFrame, frame, time, timerange, function(bbox){
+          var bboxData = {};
+          bboxData.redu=redu;
+          bboxData.bbox=bbox;
+          res.json(bboxData);
+        });
+      }
+    });
+  },
 
   /* video controls */
   makeStreamVideo: function(req,res,next){
-    var timerange = req.params.timerange;
-    var filepath = `./public/videos/${req.params.videoname}.mp4`;
-    var tempDir = `./public/temp/${req.params.videoname}${req.params.times}_range_${timerange}.mp4`;
-    var times = `${req.params.times}`* timerange;
+    var timerange = req.body.timerange;
+    var filepath = `./public/videos/${req.body.video}.mp4`;
+    var tempDir = `./public/temp/${req.body.video}${req.body.times}_range_${timerange}.mp4`;
+    var times = `${req.body.times}`* timerange;
     console.log("times: "+times);
     var makeVideo = new Promise((resolve, reject) =>{
       ffmpeg(filepath)
@@ -95,7 +145,9 @@ module.exports = {
     });
     makeVideo
     .then(()=>{
-      res.status(200).send();
+      var sendJson ={};
+      sendJson.videoPath=`/video/${req.body.video}/time/${req.body.times}/timerange/${timerange}`
+      res.json(sendJson);
     })
     .catch(()=>{
       res.status(500);

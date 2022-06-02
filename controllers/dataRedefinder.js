@@ -31,7 +31,7 @@ function dataExtraction(objData, max){
     var idxY = 0;
 
     for(var j in location){
-      if(j % 2 == 0){
+      if(j % 2 == 0){ 
         locX[idxX] = parseInt(location[j]);
         idxX++;
       }
