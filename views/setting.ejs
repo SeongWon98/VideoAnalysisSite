@@ -29,7 +29,6 @@
         <label for="speed">Speed : </label>
         <input type="checkbox" name="speed" id="speed"/>
         <div class="detail" id="detail"></div>
-
         <button type="submit" name="set">set</button>
       </form>
     </div>
@@ -59,6 +58,7 @@
     <input type="checkbox" id="fifper" onclick="clickCheck(this)">
     &nbsp;&nbsp;
     <button type="button" id="apply">적용</button>
+    <br><br>
   </div>
 
   <script>
@@ -128,6 +128,9 @@
     }
     req.send();
   }
+
+
+
   function changeCateSelect(){
     var target = document.getElementById("cate");
     var targetValue = target.value;
@@ -135,21 +138,29 @@
     var every = detailDiv.childNodes;
     var check = true;
     for(var i = 0; i < every.length; i++){
-      if(every[i].tagName=='INPUT' && every[i].id == targetValue)check=false;
+      if(every[i].tagName=='A' && every[i].id == targetValue)check=false;
     }
     if(check){
       var label = document.createElement('label');
-      label.for=targetValue;
-      label.innerText=targetValue+'의 수 : ';
-      var inputText = document.createElement('input');
-      inputText.type='text';
-      inputText.id=targetValue;
-      inputText.name=targetValue;
-      inputText.size='10';
+      label.id=targetValue+'label';
+      label.innerText='  '+targetValue+' ';
+      // var inputText = document.createElement('input');
+      // inputText.type='text';
+      // inputText.id=targetValue;
+      // inputText.name=targetValue;
+      // inputText.size='10';
+      var cancelA = document.createElement('a');
+      cancelA.innerText="x";
+      cancelA.id=targetValue;
+
       var br = document.createElement('br');
       detailDiv.appendChild(label);
-      detailDiv.appendChild(inputText);
-      detailDiv.appendChild(br);
+      detailDiv.appendChild(cancelA);
+      cancelA.addEventListener("click", ()=>{
+        cancelA.remove();
+        label.remove();
+      });
+      // detailDiv.appendChild(br);
     }
   }
   function playerClear(status){
@@ -163,7 +174,6 @@
   }
   function firstPointColor(data, pointBackgroundColors, color){
     var value = eval(`data.${data.cate[0]}_count`);
-    console.log(value);
     for (var i = 0; i < value.length; i++) {
       pointBackgroundColors.pop();
     }
@@ -200,40 +210,56 @@
   function postSetValue(){
     event.preventDefault();
     var detailDiv=document.getElementById('detail');
+    var setForm=document.getElementById('setForm');
+    var graphDiv = document.getElementById('graph_div');
     var every = detailDiv.childNodes;
     var cate = [];
-    var wantNum =[];
+    var check = true;
     for(var i = 0; i < every.length; i++){
-      if(every[i].tagName=='INPUT'){
+      if(every[i].tagName=='A'){
         cate.push(every[i].id);
-        wantNum.push(every[i].value);
       }
     }
-    var path = `${window.location.pathname}`;
-    path = path.replace('/analysis/','');
-    var data = {
-      video: path,
-      cate: cate,
-      wantNum: wantNum,
-      timerange: this.range.value,
-      speedCheck: this.speed.checked,
-      counterCheck: this.counter.checked
-    };
+    var cvsId=`${cate}`;
+    cvsId=cvsId.replaceAll(',','');
+    cvsId=`${cvsId}Chart`;
+    var graphevery = graphDiv.childNodes;
+    for(var i = 0; i < graphevery.length; i++){
+      if(graphevery[i].tagName=='CANVAS'&&graphevery[i].id==cvsId){
+        check = false;
+      }
+    }
+    if(check){
+      var path = `${window.location.pathname}`;
+      path = path.replace('/analysis/','');
+      var data = {
+        video: path,
+        cate: cate,
+        timerange: this.range.value,
+        speedCheck: this.speed.checked,
+        counterCheck: this.counter.checked
+      };
 
-    fetch('/getObjectData', {
-      method: 'POST', // 또는 'PUT'
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-    .then((response) => response.json())
-    .then((data) => {
-      makingCustomChart(data);
-    })
-    .catch((error) => {
-      console.error('실패:', error);
-    });
+      fetch('/getObjectData', {
+        method: 'POST', // 또는 'PUT'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        makingCustomChart(data);
+      })
+      .catch((error) => {
+        console.error('실패:', error);
+      });
+    }
+
+    while (detailDiv.hasChildNodes()) {
+      detailDiv.removeChild(detailDiv.firstChild);
+    }
+    setForm.reset();
   }
 
   function dataCustom(data){
@@ -256,20 +282,20 @@
   }
 
   function makingCustomChart(data){
-    console.log(data);
     var graphDiv = document.getElementById('graph_div');
     var graphCvs = document.createElement('canvas');
     graphCvs.height = 50;
     var cvsId=`${data.cate}`;
     cvsId=cvsId.replaceAll(',','');
     graphCvs.id=`${cvsId}Chart`;
-    var chart = new Chart(graphCvs, {
+    var config =  {
       type: 'line',
       data: {
         labels: data.time,
         datasets: []
       },
       options: {
+
         onClick: function(point,event){
           if(event.length==1){
             playerClear('Loding...');
@@ -286,86 +312,188 @@
           beginAtZero: true
         }
       }
-    });
-    dataCustom(data);
+    }
+    var chart = new Chart(graphCvs, config);
+    // dataCustom(data);
     var pointBackgroundColors=[];
+    var speedCheck=data.speedCheck;
+    var counterCheck=data.counterCheck;
     for(var i = 0; i < data.cate.length; i++){
+      var speedValue= eval(`data.${data.cate[i]}_speed`);
+      var countValue = eval(`data.${data.cate[i]}_count`);
       if (data.speedCheck){
         var value = eval(`data.${data.cate[i]}_speed`);
-        firstPointColor(data, pointBackgroundColors, "rgba(255, 180, 180, 1)");
+        var color1 = Math.floor(Math.random() * 256);
+        var color2 = Math.floor(Math.random() * 256);
+        var color3 = Math.floor(Math.random() * 256);
+        // firstPointColor(data, pointBackgroundColors, "rgba(255, 180, 180, 1)");
         var newDataset = {
           label: `${data.cate[i]} 속도`,
-          borderColor: ['rgba(255, 180, 180, 1)',],
-          pointBackgroundColor:pointBackgroundColors,
-          data:value,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          lineTension: .1,
+          data:[],
         }
-        chart.data.datasets.push(newDataset);
+        for(var k=0 ; k < speedValue.length ; k++){
+          newDataset.data[k]=speedValue[k];
+        }
+        config.data.datasets.push(newDataset);
       }
       if (data.counterCheck){
         var value = eval(`data.${data.cate[i]}_count`);
-        firstPointColor(data, pointBackgroundColors, "rgba(180, 180, 255, 1)");
+        // firstPointColor(data, pointBackgroundColors, "rgba(180, 180, 255, 1)");
         var newDataset = {
           label: `${data.cate[i]} 수`,
-          pointBackgroundColor:pointBackgroundColors,
-          borderColor: ['rgba(180, 180, 255, 1)',],
-          data:value,
+          lineTension: .1,
+          // pointBackgroundColor:pointBackgroundColors,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          data:[],
         }
-        chart.data.datasets.push(newDataset);
+        for(var k=0 ; k < countValue.length ; k++){
+          newDataset.data[k]=countValue[k];
+        }
+        config.data.datasets.push(newDataset);
       }
-    }
-    document.getElementById('apply').onclick = function(){
-      var dataset = chart.data.datasets;
-      var rate = 0;
-      if(document.getElementById('fiveper').checked)rate=5;
-      else if(document.getElementById('tenper').checked)rate=10;
-      else if(document.getElementById('fifper').checked)rate=15;
+      var label = document.createElement('label');
+      var input = document.createElement('input');
+      label.for=data.cate[i];
+      label.innerText='  '+data.cate[i]+': ';
+      input.name=data.cate[i];
+      input.id=`${cvsId}Input${i}`;
+      input.size='10';
+      graphDiv.appendChild(label);
+      graphDiv.appendChild(input);
+      input.addEventListener("change", ()=>{
+        if(input.value=="")console.log('blank');
 
-      for(var i = 0; i < dataset.length; i++){
-        console.log(pointBackgroundColors);
-        if(data.speedCheck && data.counterCheck){
-          if(rate != 0){
-            if(i%2==0){
-              firstPointColor(data, pointBackgroundColors, "rgba(180, 180, 255, 1)");
-              chartPointColor(dataset[i].data, pointBackgroundColors, getSortedArr(chart.data.datasets[0].data, 5), "rgba(180, 180, 255, 1)");
+        if(counterCheck&&speedCheck){
+          var idx = i-1;
+          console.log(idx);
+          for(var j=0; j<2; j++){
+            var data = config.data.datasets[j].data;
+            for(var k=0 ; k < data.length ; k++){
+              if(input.value=="" && j== 0){
+                config.data.datasets[j].fill=false;
+                data[k]=speedValue[k];
+              }
+              else if(input.value=="" && j== 1){
+                config.data.datasets[j].fill=false;
+                data[k]=countValue[k];
+              }
+              else if(data[k] < input.value){
+                config.data.datasets[j].fill=true;
+                data[k]=0;
+              }
             }
-            else {
-              firstPointColor(dataset[i].data.length, pointBackgroundColors, "rgba(255, 180, 180, 1)");
-              chartPointColor(dataset[i].data, pointBackgroundColors, getSortedArr(chart.data.datasets[1].data, 5), "rgba(255, 180, 180, 1)");
+          }
+        }else {
+          var idx = i-1;
+          var data = config.data.datasets[idx].data;
+          for(var k=0 ; k < data.length ; k++){
+            if(input.value==""&&speedCheck){
+              config.data.datasets[idx].fill=false;
+              data[k]=speedValue[k];
+            }
+            else if(input.value==""&&counterCheck){
+              config.data.datasets[idx].fill=false;
+              data[k]=countValue[k];
+            }
+            else if(data[k] < input.value){
+              config.data.datasets[idx].fill=true;
+              data[k]=0;
             }
           }
-          else{
-            firstPointColor(dataset[i].data.length, pointBackgroundColors, "rgba(180, 180, 255, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, document.getElementById('counterExcess').value, "rgba(180, 180, 255, 1)");
-            firstPointColor(dataset[i].data.length, pointBackgroundColors, "rgba(255, 180, 180, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, document.getElementById('speedExcess').value, "rgba(255, 180, 180, 1)");
-          }
         }
-        else if(data.speedCheck){
-          if(rate != 0){
-            firstPointColor(dataset[i].data.length, pointBackgroundColors, "rgba(255, 180, 180, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, getSortedArr(chart.data.datasets[1].data, 5), "rgba(255, 180, 180, 1)");
-          }
-          else{
-            firstPointColor(dataset[i].data.length, pointBackgroundColors, "rgba(255, 180, 180, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, document.getElementById('speedExcess').value, "rgba(255, 180, 180, 1)");
-          }
-        }
-        else if(data.counterCheck){
-          if(rate != 0){
-            firstPointColor(data, pointBackgroundColors, "rgba(255, 180, 255, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, getSortedArr(dataset[i].data, 5), "rgba(180, 180, 255, 1)");
-          }
-          else{
-            firstPointColor(data, pointBackgroundColors, "rgba(255, 180, 255, 1)");
-            chartPointColor(dataset[i].data, pointBackgroundColors, document.getElementById('counterExcess').value, "rgba(180, 180, 255, 1)");
-          }
-        }
-        console.log(pointBackgroundColors);
-      }
-
-      chart.update();
+        chart.update();	//차트 업데이트
+      });
     }
     graphDiv.appendChild(graphCvs);
+  }
+
+  function videoStream(video, cate, timerange, times){
+    var data = {
+      video: video,
+      timerange: timerange,
+      times: times
+    };
+    fetch('/getVideopart', {
+      method: 'POST', // 또는 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      var boxData = {
+        video: video,
+        cate: cate,
+        timerange: timerange,
+        times: times
+      };
+      fetch('/getBoundingBox', {
+        method: 'POST', // 또는 'PUT'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(boxData),
+      })
+      .then((res) => res.json())
+      .then((bboxData) => {
+        var video = document.createElement('video');
+        var fps = 15;
+        video.src=data.videoPath;
+        playerClear('Press Play');
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var canvasInterval = null;
+        var i = 0;
+        function drawBbox(){
+          var box = bboxData.bbox[i++].split(", ");
+          if(bboxData.bbox.length <= i)i=0;
+          ctx.beginPath();
+          ctx.lineWidth = "3";
+          ctx.strokeStyle = "red";
+          for(var j = 0; j < box.length; j++){
+            ctx.rect(parseInt(box[j++]/bboxData.redu), parseInt(box[j++]/bboxData.redu), parseInt(box[j++]/bboxData.redu), parseInt(box[j]/bboxData.redu));
+          }
+          ctx.stroke();
+        }
+
+        document.getElementById('play').addEventListener('click', function () {
+          video.play();
+        });
+        document.getElementById('pause').addEventListener('click', function () {
+          video.pause();
+        });
+        function drawImage(video) {
+          ctx.drawImage(video, 0, 0, 480, 270);
+        }
+        canvasInterval = window.setInterval(() => {
+          drawImage(video);
+        }, 1000 / fps);
+        video.onpause = function() {
+          clearInterval(canvasInterval);
+        };
+        video.onended = function() {
+          clearInterval(canvasInterval);
+        };
+        video.onplay = function() {
+          clearInterval(canvasInterval);
+          canvasInterval = window.setInterval(() => {
+            drawImage(video);
+            drawBbox();
+          }, 1000 / fps);
+        };
+      })
+      .catch((error) => {
+        console.error('box 실패:', error);
+      });
+    })
+    .catch((error) => {
+      console.error('video part 실패:', error);
+    });
   }
 
   addOption();

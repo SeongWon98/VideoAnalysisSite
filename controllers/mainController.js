@@ -71,7 +71,6 @@ module.exports = {
           refineData.video=req.body.video;
           refineData.cate=target;
           refineData.timerange=req.body.timerange;
-          refineData.wantNum=req.body.wantNum;
           refineData.speedCheck=req.body.speedCheck;
           refineData.counterCheck=req.body.counterCheck;
           res.json(refineData);
