@@ -22,4 +22,4 @@ router.get('/videopart/video/:videoname/time/:times/timerange/:timerange', contr
 router.get('/video/:videoname/time/:times/timerange/:timerange', controller.streamVideo);
 router.get('/image/:videoname', controller.thumnailImg);
 
-module.exports = router;
+module.exports = router

@@ -52,3 +52,59 @@ div {
 .graph_div {
   display: block;
 }
+
+.chart-form {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    height: 500px;
+    /* border: 1px solid #dddddd; */
+}
+
+.chart-form>div {
+    border: 1px solid #dddddd;
+}
+
+.chart-title {
+    border-bottom: 1px solid #dddddd;
+    background-color: #444444;
+    text-align: center;
+    color: #dddddd;
+    padding: 5px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.time-part {
+    width: 200px;
+}
+
+.chart-part {
+    width: 1000px;
+}
+
+
+.sort-wrapper {
+    margin: 10px 6px 6px 10px;
+    /* padding: 3px; */
+    display: flex;
+    border-bottom: 1px solid #dddddd;
+    font-size: 12px;
+}
+
+.sort-wrapper>div {
+    padding: 3px;
+}
+
+.sort-wrapper>div:hover {
+    border-bottom: 1px solid #111111;
+}
+
+.sort-selected {
+    font-weight: bold;
+    border-bottom: 1px solid #111111;
+}
+
+.sort-korean {
+    margin-left: 6px;
+}

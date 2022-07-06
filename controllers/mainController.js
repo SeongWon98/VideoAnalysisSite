@@ -27,6 +27,7 @@ module.exports = {
   getVideoCategory: function(req,res,next){
     categoryFinder.default(`./public/videodatas/${req.params.video}.csv`, function(category){
       var cate = Array.from(category);
+      console.log(cate);
       res.json([{category: cate}]);
     });
   },

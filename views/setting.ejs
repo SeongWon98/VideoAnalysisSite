@@ -41,7 +41,6 @@
   </div>
 
   <hr>
-
   <div class="graph_div" id="graph_div">
     <label for="counterExcess">counter:</label>
     <input type="text" id="counterExcess" name="counterExcess" required minlength="4" maxlength="8" size="10" onclick="clickCheckInput()">
@@ -58,6 +57,7 @@
     <input type="checkbox" id="fifper" onclick="clickCheck(this)">
     &nbsp;&nbsp;
     <button type="button" id="apply">적용</button>
+
     <br><br>
   </div>
 
@@ -128,8 +128,6 @@
     }
     req.send();
   }
-
-
 
   function changeCateSelect(){
     var target = document.getElementById("cate");
@@ -322,10 +320,7 @@
       var speedValue= eval(`data.${data.cate[i]}_speed`);
       var countValue = eval(`data.${data.cate[i]}_count`);
       if (data.speedCheck){
-        var value = eval(`data.${data.cate[i]}_speed`);
-        var color1 = Math.floor(Math.random() * 256);
-        var color2 = Math.floor(Math.random() * 256);
-        var color3 = Math.floor(Math.random() * 256);
+        var value= [1,2,3,4,5];
         // firstPointColor(data, pointBackgroundColors, "rgba(255, 180, 180, 1)");
         var newDataset = {
           label: `${data.cate[i]} 속도`,
@@ -335,9 +330,25 @@
           data:[],
         }
         for(var k=0 ; k < speedValue.length ; k++){
-          newDataset.data[k]=speedValue[k];
+          newDataset.data[k]=parseInt(speedValue[k]);
         }
         config.data.datasets.push(newDataset);
+        // var rushDataset = {
+        //   backgroundColor: 'rgba(255, 0, 0, 0.5)',
+        //   pointRadius: 0,
+        //   borderWidth: 0,
+        //   lineTension: .1,
+        //   fill:true,
+        //   data:[],
+        // }
+        // var max = Math.max(...speedValue);
+        // var index = newDataset.data.indexOf(max);
+        // console.log(index+' a '+max);
+        // for(var k=0 ; k < speedValue.length ; k++){
+        //   if(index-5 < k && index+5 > k)rushDataset.data[k]=speedValue[k];
+        //   else rushDataset.data[k]=0;
+        // }
+        // config.data.datasets.push(rushDataset);
       }
       if (data.counterCheck){
         var value = eval(`data.${data.cate[i]}_count`);
@@ -354,6 +365,22 @@
           newDataset.data[k]=countValue[k];
         }
         config.data.datasets.push(newDataset);
+        // var rushDataset = {
+        //   backgroundColor: 'rgba(255, 0, 0, 0.5)',
+        //   pointRadius: 0,
+        //   borderWidth: 0,
+        //   lineTension: .1,
+        //   fill:true,
+        //   data:[],
+        // }
+        // var max = Math.max(...countValue);
+        // var index = newDataset.data.indexOf(max);
+        // console.log(index+' a '+max);
+        // for(var k=0 ; k < countValue.length ; k++){
+        //   if(index-5 < k && index+5 > k)rushDataset.data[k]=countValue[k];
+        //   else rushDataset.data[k]=0;
+        // }
+        // config.data.datasets.push(rushDataset);
       }
       var label = document.createElement('label');
       var input = document.createElement('input');
@@ -366,7 +393,6 @@
       graphDiv.appendChild(input);
       input.addEventListener("change", ()=>{
         if(input.value=="")console.log('blank');
-
         if(counterCheck&&speedCheck){
           var idx = i-1;
           console.log(idx);
