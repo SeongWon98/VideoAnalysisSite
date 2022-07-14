@@ -1,0 +1,81 @@
+html, body {
+  padding-top: 0;
+  padding-left: 0;
+  margin-top: 0;
+  margin-left: 0;
+  height: 100%;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+img {
+  display: block;
+}
+
+.side-div{
+  width: 15em;
+  height: 100%;
+  /* background: #808080; */
+  float: left;
+}
+.main-div{
+  height: 100%;
+  width: 70em;
+  float:left;
+}
+.sidebar{
+  width: 200px;
+  height: 100%;
+  /* background: #808080; */
+  /* position: fixed; */
+  top: 0;
+  margin-left: 0;
+  padding-left: 0;
+  z-index:1;
+}
+.video-list{
+  text-decoration: none;
+  text-align: center;
+  padding: 30px;
+  color: white;
+}
+.video-list:hover{
+  background: #666666;
+}
+.list-img{
+  display: block;
+  margin: 0;
+  padding: 0;
+  width: 10em;
+}
+.linechart-part{
+  width: 100%;
+}
+.line-chart{
+  height: 300px;
+  width: 100%;
+}
+
+.piechart-part{
+  float: left;
+  height: 500px;
+  width: 950px;
+}
+.time-list{
+  text-align: center;
+  overflow:scroll;
+  height:450px;
+  width: 100px;
+  float:left;
+}
+.time-btn{
+  width: 50px;
+}
+.pie-div{
+  float:left;
+  height: 450px;
+  width: 800px;
+}

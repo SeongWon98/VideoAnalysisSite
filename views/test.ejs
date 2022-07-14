@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>home</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <video id = "video" width="480" height="270" controls></video>
+    <button id = "btn">10sec</button>
+    <script>
+        var video = document.getElementById("video");
+        video.src = "/stream/etriDeajeon";
+        var btn = document.getElementById("btn");
+        btn.addEventListener('click', function(){
+            video.currentTime += 10;
+        });
+        
+    </script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>home</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+  </head>
+  <body>
+    <br>
+    <br>
+    <div class="side-div">
+      <ul class="sidebar" id="sidebar"></ul>
+    </div>
+    <div class="main-div">
+      <div class="video-part">
+        <video id = "video-player" width="480" height = "270" controls>
+        </video>
+        <canvas class="stream-canvas" id="stream-canvas" width="480" height="270"></canvas>
+        <br>
+      </div>
+      <br>
+      <br>
+      <div class="linechart-part">
+        choose object : 
+        <select id="object-menu">
+        </select>
+        Time set : 
+        <select id="range" name="range">
+            <option value=10>10</option>
+            <option value=30>30</option>
+            <option value=60>60</option>
+        </select>
+        <canvas class="line-chart" id="line-chart"></canvas>
+      </div>
+      <br>
+      <hr>
+      <div class="piechart-part">
+        <div class="time-div">
+          <div> Time List </div>
+          <div class="time-list" id="time-list"></div>
+        </div>
+        
+        <div class="pie-div">
+          <canvas class="pie-chart" id="pie-chart"></canvas>
+        </div>
+      </div>
+    </div>
+    <script src="/javascripts/videoList.js"></script>
+    <script src="/javascripts/videoStream.js"></script>
+    <script src="/javascripts/drawChart.js"></script>
+  </body>
+</html>
